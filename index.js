@@ -129,6 +129,82 @@ app.post('/products/:productId/assignCategory/:categoryId',async(req,res)=>{
     }
 })
 
+// Get All Products by Category
+
+async function findByCategory(id) {
+    let response = await Product.findOne({where:{id}});
+    return {response};
+}
+
+app.get('/categories/:id/products',async(req,res)=>{
+    try{
+    let id = parseInt(req.params.id);
+    let result = await findByCategory(id);
+    res.status(200).json({products:result});
+    }catch(error){
+        res.status(500).json({message:"Internal Server Error",error:error.message});
+    }
+})
+//  Update a Supplier
+
+async function updateData(id,supplierBody) {
+  let updatedData = await Supplier.findOne({where:{id}});
+  if(!updatedData){
+    return {};
+  }
+  await updatedData.set(supplierBody);
+  let response = await updatedData.save();
+  return response;
+}
+
+app.post('/suppliers/:id/update',async(req,res)=>{
+    try{
+    let id = parseInt(req.params.id);
+    let supplierBody = req.body;
+    let result = await updateData(id,supplierBody);
+    res.status(200).json({updateSupplier: result});
+    }catch(error){
+        res.status(500).json({message:"Internal Server Error",error:error.message});
+    }
+})
+
+// Delete a Supplier
+
+async function deleteSupplier(id) {
+    let response = await Supplier.findOne({
+        where:{id}
+    });
+  return {response};
+}
+
+app.post('/suppliers/delete/:id',async(req,res)=>{
+    try{
+    let id = parseInt(req.params.id);
+    let result = await deleteSupplier(id);
+    res.status(200).json({message:"Supplier deleted successfully!"});
+    }catch(error){
+        res.status(500).json({message:"Internal Server Error!",error:error.message});
+    }
+
+})
+
+//  Get All Data with Associations
+app.get('/suppliers', async (req, res) => {
+    try {
+      const suppliers = await Supplier.findAll({
+        include: [
+          {
+            model: Product,
+            include: [Category],
+          },
+        ],
+      });
+      res.status(200).json({ suppliers });
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+      res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
+  });
 
 app.listen(3000,()=>{
     console.log(`Server is running on port ${3000}`);
